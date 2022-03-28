@@ -150,7 +150,7 @@ $$L_G = \sum_{e\in E} L_e.$$
 \item\label{LQF}{\bf Laplacian quadratic form}.
 The {\em Laplacian quadratic form} (or just LQF) is $x^TLx$,
 where $L$ is a particular graph's Laplacian and $x$ is a variable $n$-vector.
-Its value for a particular vector $x$ is 
+Its value for a particular vector~$x$ is 
 $$x^TLx = \sum_{(a,b)\in E}(x(a)-x(b))^2.$$
 
 \item{\bf Cut vector}.
@@ -331,7 +331,8 @@ written $\phi_G$, is the smallest conductance of any nonempty
 proper subset of vertices,
 $$\phi_G = \min_{S\subset V}\phi(S).$$
 Note that $\phi_G=0$ iff $G$ is not connected.
-(``Conductance'' has a different meaning in resistive networks, as we'll see later.); see~(\ref{resistive}) below.)
+(``Conductance'' has a different meaning in resistive networks, 
+as we'll see later; see~(\ref{resistive}) below.)
 
 \item\label{nlap}{\bf Normalized Laplacian}.
 The normalized Laplacian of graph~$G$ is 
@@ -975,7 +976,7 @@ the number of edges in a spanning tree.
 Let $G$ be a connected weighted Laplacian.
 Select a subgraph~$H$ at random by choosing each edge
 of~$G$ independently with probability proportional to its leverage score.
-Then inflate the weights of each edge of~$H$ 
+Then inflate the weight of each edge of~$H$ 
 by the inverse of its probability of being chosen.
 This inflation makes the expected value of~$H$ (as a matrix) equal to~$G$.
 
