@@ -1,0 +1,1075 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{graphicx}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem*{pathlemma}{Path Lemma}
+\newtheorem*{etreelemma}{Etree Fill Lemma}
+\newcommand{\m}[1]{{\bf{#1}}}       % for matrices and vectors
+\newcommand{\ones}{\m1}             % vector of all ones
+\newcommand{\zeros}{\m0}            % vector of all zeros
+\newcommand{\diag}{\mbox{diag}}
+\newcommand{\Diag}{\mbox{Diag}}
+\newcommand{\dilation}{\mbox{dilation}}
+\newcommand{\congestion}{\mbox{congestion}}
+\newcommand{\stretchh}{\mbox{stretch}}
+\newcommand{\Reff}{R^{\mbox{\scriptsize eff}}}  % effective resistance
+\newcommand{\pinv}{^{\dagger}}          % pseudoinverse
+\newcommand{\sdroot}{^{1/2}}            % semidefinite square root
+\newcommand{\pinvroot}{^{\dagger/2}}    % square root of pseudoinverse
+\newcommand{\Real}{\mathbb{R}}          % real numbers
+\newcommand{\krylov}{\mathcal{K}}       % Krylov subspace
+\newcommand{\Tr}{\mbox{Tr}}             % trace of a matrix
+
+\topmargin 0in
+\textheight 7.9in
+\oddsidemargin 0pt
+\evensidemargin 0pt
+\textwidth 6.5in
+
+\begin{document}
+
+\title{Index of Notation, Definitions, and Theorems}
+\author{CS 292F: Graph Laplacians and Spectra}
+\date{Version of March 28, 2022}
+\maketitle
+
+There is a lot of variation in terminology and notation in
+the field of Laplacian matrix computation and spectral graph 
+theory.  
+Indeed, even ``Laplacian matrix'' is defined differently by
+different authors!
+
+This list gives the versions of notation, terminology, and definitions 
+that we will use in CS 292F.
+I mostly follow the conventions of Dan Spielman's notes, 
+though I prefer not to use greek letters for vectors.
+It will also include some key theorems, without proofs.
+I will keep adding to this list during the quarter.
+
+\begin{enumerate}
+
+\item
+Unless otherwise stated, a {\em graph} $G = (V,E)$ is always 
+an undirected graph whose $n$ vertices are the integers 
+$1$ through $n$, with no multiple edges or loops.
+
+\item
+The {\em degree} of a vertex is the number of edges incident on it, 
+or equivalently (because we don't allow multiple edges or loops)
+the number of its neighboring vertices.
+
+\item 
+A graph is said to be {\em regular} if every vertex has the same degree.
+
+\item
+A graph is said to be {\em connected} if, for every choice of two
+vertices $a$ and~$b$, there is a {\em path} of edges from $a$ to~$b$.
+The {\em connected components} of a graph are its maximal connected
+subgraphs.
+
+\item
+$K_n$ is the {\em complete graph}, which has $n$ vertices and all $n(n-1)/2$ possible edges.
+
+\item
+$P_n$ is the {\em path graph}, which has $n$ vertices and $n-1$ edges in a single path.
+
+\item
+$S_n$ is the {\em star graph}, which has $n$ vertices, one with degree $n-1$ and 
+$n-1$ with degree 1.
+
+\item
+$H_k$ is the {\em hypercube graph}, which has $n=2^k$ vertices, all of degree $k$.
+Vertices $i$ and $j$ have an edge between them if $i$ and $j$ differ by a power of 2.
+Equivalently, we can identify each vertex with a subset of $\{1,\ldots,k\}$,
+with edges to just those subsets formed by adding or deleting one element.
+
+\item
+$G_e$ or $G_{(a,b)}$ is the graph with $n$ vertices and only one edge $e = (a,b)$.
+
+\item
+We will write a {\em vector} as a lower-case latin letter, 
+possibly with a subscript, like $x$ or $w_2$.  
+We often think of an $n$-vector as a set of labels for the
+$n$ vertices of a graph; 
+in that case element $i$ of vector $x$ is written as $x(i)$,
+and we may write $x\in\Real^V$ instead of $x\in\Real^n$.
+In linear algebraic expressions, vectors are column vectors.
+
+\item
+Two special vectors are $\zeros$, the vector of all zeros,
+and $\ones$, the vector of all ones.
+
+\item
+If $a$ is a vertex then $\ones_a$~is the 
+{\em characteristic vector} of~$a$, which
+is zero except for $\ones_a(a)=1$.
+Similarly if $S$~is a set of vertices, 
+then $\ones_S$ is the vector that is equal to one
+on the elements of~$S$ and zero elsewhere.
+
+\item
+If $x$ and $y$ are vectors of the same dimension, 
+$$x^Ty = y^Tx = \sum_{i=0}^{n}x(i)y(i)$$
+is their inner product (or dot product).
+Thus $\ones^T\!x$ is the sum of the elements of $x$,
+and $x^Tx$ is the square of the 2-norm (Euclidean length) of $x$.
+If $x^Ty=0$, we call $x$ and $y$ {\em orthogonal}, 
+and they are in fact perpendicular as vectors in $\Real^n$.
+
+\item
+If $d$ is an $n$-vector, $\Diag(d)$ is the $n$-by-$n$ diagonal 
+matrix with the elements of $d$ on the diagonal.
+If $A$ is any $n$-by-$n$ matrix, $\diag(A)$ is the $n$-vector
+of the diagonal elements of $A$.
+
+\item\label{lap}{\bf Laplacian matrix}.
+The Laplacian of graph $G$ is the $n$-by-$n$ matrix $L$
+whose diagonal element $L(a,a)$ is the degree of vertex $a$, 
+and whose off-diagonal element $L(a,b)$ is~$-1$ if $(a,b) \in E$ 
+and $0$ if $(a,b) \notin E$.
+This matrix, which we (and Spielman) just call the Laplacian,
+is sometimes called the {\em combinatorial Laplacian} to 
+distinguish it from the normalized Laplacian below~(\ref{nlap}).
+Note that $ L\ones = \zeros$.
+
+\item
+$L_e$ or $L_{(a,b)}$ is the $n$-by-$n$ Laplacian matrix
+of the graph with $n$ vertices and only one edge $e = (a,b)$.
+This matrix has only four nonzero elements, two 1's on the
+diagonal and two $-1$'s in positions $(a,b)$ and $(b,a)$;
+thus 
+$$L_{(a,b)}=(\ones_a-\ones_b)(\ones_a-\ones_b)^T.$$
+The Laplacian of any graph $G=(V,E)$ is the sum of the Laplacians
+of its edges,
+$$L_G = \sum_{e\in E} L_e.$$
+
+\item\label{LQF}{\bf Laplacian quadratic form}.
+The {\em Laplacian quadratic form} (or just LQF) is $x^TLx$,
+where $L$ is a particular graph's Laplacian and $x$ is a variable $n$-vector.
+Its value for a particular vector $x$ is 
+$$x^TLx = \sum_{(a,b)\in E}(x(a)-x(b))^2.$$
+
+\item{\bf Cut vector}.
+A cut vector is a vector each of whose elements is $+1$ or $-1$.
+We can think of a cut vector~$x$ as representing a {\em cut} that partitions
+the vertices of graph into two sets $S = \{\,a : x(a) = 1\,\}$
+and $V-S = \{\,a : x(a) = -1\,\}$;
+then $x = \ones_S-\ones_{V-S}$.
+The LQF evaluated at a cut vector is easily seen to be four times the number 
+of edges that cross the cut:
+$$ x^TLx = 4\cdot|\{\,(a,b)\in E : a\in S \wedge b\in V-S\,\}|.$$
+
+\item\label{eig}{\bf Eigenvalues and eigenvectors}.
+If $Aw=\lambda w$ for any square matrix~$A$, nonzero vector~$w$, and scalar~$\lambda$, 
+then $\lambda$ is an {\em eigenvalue} of~$A$ and $w$~is an {\em eigenvector}
+associated with~$\lambda$.
+
+\item
+If $A$ is square and $B$~is nonsingular, then the eigenvalues of $BAB^{-1}$ are the
+same as those of~$A$, 
+and the eigenvectors of $BAB^{-1}$ are $B$ times the eigenvectors of~$A$.
+
+\item
+Every Laplacian $L$ is {\em positive semidefinite}, 
+which (along with symmetry) implies that its $n$ eigenvalues are nonnegative and real.
+Zero is an eigenvalue of $L$ with multiplicity
+equal to the number of connected components of the graph $G$.  
+Therefore,
+if $G$ is connected, we have $0 = \lambda_1 < \lambda_2 \leq \cdots \leq \lambda_n$.
+In that case the eigenvector $w_1$ is the constant vector $\ones/\sqrt n$.
+
+\item{\bf Fiedler value and Fiedler vector}.
+The Fiedler value of a graph is $\lambda_2$, its second-smallest eigenvalue,
+and the Fiedler vector is $w_2$, the associated eigenvector.
+The Fiedler value of a graph is also called its {\em algebraic connectivity}.
+Note that $\lambda_2=0$ iff the graph is not connected.
+
+\item{\bf Orthogonal matrix}.
+A square matrix $Q$ is orthogonal if $Q^TQ=I$, that is, its inverse
+is its transpose.  
+As vectors, 
+the columns of $Q$ have unit length and are pairwise perpendicular; 
+the same is true of the rows of $Q$.
+
+\item\label{symeig}{\bf Symmetric eigenvalue factorization}.
+If the $n$-by-$n$ matrix $A$ is symmetric, then it possesses $n$ real eigenvalues
+$\lambda_1\leq\lambda_2\leq\cdots\leq\lambda_n$ (possibly including duplicates) 
+associated with $n$ mutually orthogonal unit-length eigenvectors
+$w_1, w_2, \ldots, w_n$.  If $W$ is the matrix $[w_1\; w_2\; \ldots\; w_n]$
+and $\Lambda$ is the matrix $\Diag(\lambda_1,\ldots,\lambda_n)$
+then we can summarize this as $AW = W\Lambda$ and $W^TW=I$.
+We also have $A=W\Lambda W^T$, whence
+$$A = \sum_{i=1}^n \lambda_i w_iw_i^T.$$
+
+\item{\bf Eigenvector basis}.
+If symmetric $A$ and its eigenvalues and eigenvectors are as in~(\ref{symeig}), 
+any vector $x$ can be written as a linear combination of eigenvectors,
+$$x = \sum_{i=1}^n \alpha_i w_i,$$
+where $\alpha_i = w_i^Tx.$  
+Multiplication by $A$ acts termwise on such a sum:
+$$A^k x = \sum_{i=1}^n \alpha_i\lambda_i^k w_i.$$
+
+\item{\bf Pseudoinverse}.
+If $A$ and its eigenvalues and eigenvectors 
+are as in~(\ref{symeig}), 
+the pseudoinverse of~$A$ is
+$$A\pinv = \sum_{\lambda_i\ne 0} \frac{1}{\lambda_i} w_iw_i^T,$$
+where the sum is taken over the nonzero eigenvalues of $A$.
+If $A$ is nonsingular, $A\pinv=A^{-1}$.
+If $x$ is orthogonal to the null space of $A$ 
+(i.e.\ $x^Tw_i=0$ whenever $\lambda_i=0$), then
+$$A\pinv A x = AA\pinv x = x.$$
+
+\item{\bf Square root}.
+The positive semidefinite square root of a positive semidefinite matrix~$A$
+with eigenvalues and eigenvectors as in~(\ref{symeig}) is the matrix
+$$A\sdroot = \sum_{i=1}^n \lambda_i^{1/2} w_iw_i^T.$$
+We write the psd square root of~$A\pinv$ as 
+$$A\pinvroot = \sum_{\lambda_i\ne 0} \lambda_i^{-1/2} w_iw_i^T.$$
+
+\item{\bf Trace of a matrix}.
+The trace of a square matrix is the sum of its eigenvalues:
+$$\Tr(A) = \sum_{i=1}^n \lambda_i.$$
+Properties of the trace include:
+
+\begin{itemize}
+
+\item The trace is equal to the sum of the diagonal elements,
+$$\Tr(A) = \sum_{i=1}^n A(i,i).$$
+
+\item $\Tr(A+B) = \Tr(A)+\Tr(B)$.
+
+\item $\Tr(AB) = \Tr(BA)$.
+
+\item If $x$ is any vector, $\Tr(Axx^T) = x^TAx$.
+
+\item The trace of the Laplacian of an uweighted graph is twice the
+number of edges in the graph. The trace of the Laplacian of a weighted
+graph~(\ref{wgraph}) is twice the sum of the edge weights.
+
+\end{itemize}
+
+\item{\bf Rayleigh quotient}.
+The Rayleigh quotient of a nonzero vector $x$ and a matrix $A$ is
+$$\frac{x^TAx}{x^Tx}.$$
+If $Ax=\lambda x$, then the Rayleigh quotient of $x$ and $A$ is $\lambda$.
+
+\item\label{RQT}{\bf Rayleigh quotient theorem}.
+The eigenvectors of a symmetric matrix $A$ are critical points of its
+Rayleigh quotient (considered as a real-valued function of an $n$-vector).
+Specifically, 
+$$\lambda_k = \min_{x\perp w_1,\ldots,w_{k-1}} \frac{x^TAx}{x^Tx}
+            = \max_{x\perp w_{k+1},\ldots,w_n} \frac{x^TAx}{x^Tx},$$
+and the extreme values are attained at $x = w_k$.
+In particular, therefore, for a Laplacian $L$ the Fiedler value is
+$$\lambda_2 = \min_{\ones^T\!x=0} \frac{x^TAx}{x^Tx},$$
+attained at the Fiedler vector $w_2$.
+
+\item\label{CFT}{\bf Courant-Fischer theorem}
+(another version of the Rayleigh quotient theorem).
+The eigenvalues $\lambda_1\leq\cdots\leq\lambda_n$ of a symmetric matrix $A$ 
+are characterized by
+$$\lambda_k = \max_{\dim \mathbb{S}=n-k+1}\;\min_{x\in \mathbb{S}}\frac{x^TAx}{x^Tx}
+            = \min_{\dim \mathbb{S}=k}\;\max_{x\in \mathbb{S}}\frac{x^TAx}{x^Tx},$$
+where $\mathbb{S}$ ranges over subspaces of $\Real^n$.
+The extreme values are attained at $x = w_k$.
+
+\item{\bf Test vector}.
+A test vector for $\lambda_2$ is an $n$-vector that is
+orthogonal to $\ones$.  By the Raleigh quotient theorem,
+if $v$ is any test vector then $\lambda_2 \leq v^TLv/v^Tv$.
+Note that any vector $x$ can be converted to a test vector 
+$v = x - (\ones^T\!x/n) \ones$; in words, subtracting off
+the mean of any vector orthogonalizes it against the constant
+vector.
+
+\item
+The {\em boundary} of a set $S\subseteq V$ of vertices, written $\partial S$,
+is the set of edges with just one endpoint in $S$. Formally,
+$\partial S = \{\,(a,b)\in E : a \in S \wedge b \in V-S\,\}$.
+The number of edges in $\partial S$ is $|\partial S|$.
+
+\item\label{isop}{\bf Isoperimetric ratio}.
+The isoperimetric ratio of a set $S\subseteq V$ of vertices,
+written $\theta(S)$, is the ratio
+$$\theta(S) = \frac{|\partial S|}{|S|}.$$
+This is one sort of ``surface-to-volume ratio''; 
+see the definition of conductance~(\ref{cond}) 
+for another.
+The isoperimetric ratio of a graph $G$,
+written $\theta_G$, is the smallest isoperimetric ratio over all 
+sets with at most half the vertices,
+$$\theta_G = \min_{|S|\leq n/2}\theta(S).$$
+Note that $\theta_G=0$ if and only if $G$ is not connected.
+
+\item\label{isopthm} {\bf Isoperimetric theorem}.
+For any set $S$ of vertices, 
+$$\theta(S) \geq \lambda_2(1-|S|/n).$$
+It follows that the isoperimetric ratio of the graph is bounded 
+in terms of the Fiedler value,
+$$\theta_G \geq \lambda_2/2.$$
+This says that the larger $\lambda_2$ is, the larger the surface-to-volume
+ratio of any relatively small set of vertices must be.
+
+\item\label{cond}{\bf Conductance}.
+The conductance of a set $S\subseteq V$ of vertices,
+written $\phi(S)$, is the ratio 
+$$\phi(S) = \frac{|\partial S|}{\min(d(S),d(V-S))},$$
+where $d(S)$ is the sum of the degrees of the vertices in $S$.
+This is another sort of ``surface-to-volume ratio'';
+isoperimetric number~(\ref{isop}) measures volume just by counting vertices, 
+while conductance measures volume by counting vertices weighted by their degrees.
+In class we defined conductance for unweighted graphs,
+but the definition extends to weighted graphs~(\ref{wgraph}) with
+a suitable interpretation of~$d(S)$.
+The conductance of a graph $G$,
+written $\phi_G$, is the smallest conductance of any nonempty 
+proper subset of vertices,
+$$\phi_G = \min_{S\subset V}\phi(S).$$
+Note that $\phi_G=0$ iff $G$ is not connected.
+(``Conductance'' has a different meaning in resistive networks, as we'll see later.); see~(\ref{resistive}) below.)
+
+\item\label{nlap}{\bf Normalized Laplacian}.
+The normalized Laplacian of graph~$G$ is 
+the $n$-by-$n$ matrix~$N$
+whose diagonal element $N(a,a)$ is equal to 1,
+and whose off-diagonal element $N(a,b)$ 
+is~$-1/\sqrt{d(a)d(b)}$ if $(a,b) \in E$ and $0$ if $(a,b) \notin E$,
+where we define $d$ to be the vector of vertex degrees of~$G$.
+Another way to say it is that the normalized Laplacian is 
+the (ordinary) Laplacian with rows and columns scaled symmetrically 
+to make the diagonal elements equal to~1. 
+If $D=\diag(d)$ is the diagonal matrix of degrees, 
+then 
+$$N = D^{-1/2}LD^{-1/2}.$$
+Some authors, including notably Fan Chung in her 
+wonderful book {\em Spectral Graph Theory}, 
+use the name ``Laplacian'' for this matrix~$N$
+instead of for our~$L$.
+
+\item\label{nlapeig}
+The normalized Laplacian~$N$ is symmetric and 
+positive semidefinite, and like the Laplacian
+it has 0 as an eigenvalue with multiplicity
+equal to the number of connected components
+of~$G$.  In general however $N$'s eigenvalues
+and eigenvectors are different from $L$'s.
+We write $0=\nu_1\leq \nu_2\leq \cdots\leq \nu_n$
+for the eigenvalues of~$N$.
+The eigenvector corresponding to~$\nu_1$ is
+not the constant vector, but the vector~$d^{1/2}$
+of the square roots of the vertex degrees:
+$$Nd^{1/2} = D^{-1/2}LD^{-1/2}d^{1/2} = D^{-1/2}L\ones = D^{-1/2}\zeros = \zeros.$$
+
+\item\label{nlaprq}
+The Rayleigh quotient for the normalized Laplacian~$N$, 
+whose critical points determine the eigenvalues,
+is related to a ``generalized Rayleigh quotient'' for the Laplacian~$L$.
+Specifically, we have
+$$\frac{x^TNx}{x^Tx} = \frac{y^TLy}{y^TDy},$$
+where $D=\Diag(d)$ is the diagonal matrix of vertex degrees 
+and $y=D^{-1/2}x$.
+Thus the eigenvalues of $Nx=\nu x$ come from
+the generalized eigenvalue problem $Ly=\nu Dy.$
+
+\item\label{gershgorin}{\bf Gershgorin's theorem}.
+If $A$ is any square matrix (real or complex), its $n$~eigenvalues are all contained
+in the union of the $n$~disks $D_1,\ldots,D_n$ in the complex plane defined by
+$$D_a = \{\alpha : |\alpha-A(a,a)| \leq \sum_{b\neq a}|A(a,b)|\}.$$
+This implies, for example, that the largest eigenvalue~$\lambda_n$ of a Laplacian
+is at most twice the maximum vertex degree.
+
+\item
+It follows from Gershgorin's theorem~(\ref{gershgorin}) that
+the eigenvalues of the normalized Laplacian $N$ are always bounded by~0 and~2,
+$$0 = \nu_1 \leq \nu_2 \leq \cdots \leq \nu_n \leq 2.$$
+
+\item\label{cheeger} {\bf Cheeger's inequalities}.
+The normalized Laplacian can be used to give both 
+upper and lower bounds on the conductance,
+$$\nu_2/2 \leq \phi_G \leq \sqrt{2\nu_2}.$$
+Equivalently,
+$$\phi_G^2/2 \leq \nu_2 \leq 2\phi_G.$$
+The upper bound on~$\nu_2$ is analogous to the
+isoperimetric inequality~(\ref{isopthm}).
+The lower bound on~$\nu_2$ is Cheeger's inequality,
+one of the most significant theorems of spectral
+graph theory.
+In class we stated (and mostly proved) these
+inequalities for unweighted graphs, but they 
+hold for weighted graphs~(\ref{wgraph}) as well; 
+the Spielman book proves the weighted version.
+
+\item\label{csi} {\bf Cauchy-Schwarz inequality}.
+Just for reference, because it comes up in several of
+the proofs we're looking at.  
+If $x$ and~$y$ are $n$-vectors, then 
+$$|x^Ty| \leq \|x\|\,\|y\|.$$
+Equivalently,
+$$\Big(\sum_i x(i)y(i)\Big)^2 \leq 
+\Big(\sum_i x(i)^2\Big)
+\Big(\sum_i y(i)^2\Big).$$
+
+\item\label{wgraph}{\bf Weighted graph}.
+A weighted graph is an undirected graph that comes 
+with {\em positive} weights on the edges, which we write~$c(e)$ or~$c(a,b)$.
+We take $c(a,b)=0$ if $(a,b)$ is not an edge; 
+weights on edges are required to be strictly positive.
+Note that $c(a,b)=c(b,a)$.
+We can think of all graphs as weighted graphs;
+an ``unweighted'' graph just has edge weights all equal to~1.
+
+\item
+In a weighted graph, we often interpret~$d(a)$, for a vertex~$a$,
+not as the number of incident edges but as the sum of the weights
+of the incident edges:
+$$d(a) = \sum_{b \neq a}c(a,b),$$
+and we often define the diagonal matrix $D = \Diag(d)$ as the matrix
+whose entries are those sums.
+We also (as before) write~$d(S)$, where $S$~is a set of vertices, 
+to mean $\sum_{a \in S}d(a)$.
+
+\item\label{wlap}{\bf Weighted Laplacian}.
+The Laplacian matrix of a weighted graph
+is the $n$-by-$n$ matrix~$L$ whose off-diagonal
+element~$L(a,b)$ is~$-c(a,b)$ if $(a,b) \in E$ and $0$ if $(a,b) \notin E$,
+and whose diagonal element $L(a,a) = d(a) = \sum_{b \neq a}c(a,b)$ 
+is chosen to make the row sums zero.
+Like the Laplacian of an unweighted graph, we have $L\ones=\zeros$, 
+and indeed 0~is an eigenvalue of~$L$ with multiplicity equal to the 
+number of connected components of the graph.
+For an unweighted graph, this is equivalent to our previous definition,
+with all edge weights equal to~1.
+
+\item\label{wnorm}{\bf Normalized weighted Laplacian}.
+The normalized Laplacian matrix of a weighted graph is the matrix~$N$
+whose diagonal element~$N(a,a)$ is equal to~1,
+and which for each edge~$(a,b)$ has symmetric off-diagonal elements 
+$N(a,b) = N(b,a) = -c(a,b)/\sqrt{d(a)d(b)}$.
+Here $d(a)$ is the sum of the weights of edges incident on~$a$.
+If $D = \Diag(d)$ is the diagonal matrix of those sums
+and $L$ is the Laplacian of the weighted graph, then
+$$N = D^{-1/2}LD^{-1/2}.$$
+Like the normalized Laplacian of an unweighted graph, 
+we have $Nd^{1/2}=\zeros$, 
+and 0 remains an eigenvalue of~$N$ with multiplicity equal to the 
+number of connected components of the graph.
+Again this is equivalent to our previous definition for an unweighted graph
+if all edge weights are equal to~1.
+
+\item {\bf Multiple of a graph}.
+If $G$ is a (weighted) graph and $\alpha>0$ is a constant, $\alpha G$~is the
+graph whose edge weights are all multiplied by~$\alpha$.
+The ordinary Laplacian of~$\alpha G$ is $\alpha$~times the Laplacian of~$G$,
+$$L_{\alpha G} = \alpha L_G.$$ 
+On the other hand, the normalized Laplacian of $\alpha G$ is the same as the
+normalized Laplacian of~$G$, 
+$$N_{\alpha G} = N_G,$$ 
+since the normalization wipes out the factor of~$\alpha$.
+
+\item{\bf Krylov subspace}.
+The $t$-dimensional Krylov subspace based on a square matrix~$A$ 
+and a vector~$b$ is 
+$$\krylov_t(A,b) = \mbox{span}(b,Ab,A^2b,\ldots,A^{t-1}b).$$
+
+\item\label{QR}{\bf Symmetric $QR$ algorithm}.
+This algorithm computes all the eigenvalues and all the eigenvectors
+of a symmetric matrix~$A$ in two phases. 
+The first phase applies a sequence of $n-2$ elementary orthogonal 
+transformations called {\em Householder reflections} to~$A$,
+symmetrically from the left and right.
+The reflections are chosen to zero out each column in turn 
+below its first subdiagonal element (and, because of symmetry,
+each row after its first superdiagonal element), 
+giving the factorization
+$$Q^TAQ = T,$$
+where $Q$ is orthogonal and $T$ is tridiagonal (and symmetric).
+The second phase is iterative, and converts $T$ to a diagonal matrix
+by applying a sequence of elementary orthogonal transformations called
+{\em Givens rotations} to reduce the magnitude of the off-diagonal
+elements by a process called ``bulge-chasing'' that is 
+reminiscent of squeezing the last bit of toothpaste from a tube.
+Iterations continue until the off-diagonal elements are sufficiently small
+to be negligible.
+This gives the factorization
+$$V^TTV = \Lambda,$$
+where $V$ is orthogonal and $\Lambda$ is diagonal.
+Taking $W=QV$, we then have the eigenvalue factorization
+$$A = W\Lambda W^T.$$
+The first phase does $O(n^3)$ work, and we can think of the second phase
+(modulo details about convergence and floating-point arithmetic)
+as doing $O(n^2)$ work. 
+This is the workhorse method for computing all eigenvalues and eigenvectors
+of dense matrices, 
+but it can't be used for very large sparse matrices
+both because of the $n^3$~work and because the first phase 
+needs $n^2$~memory to store intermediate fill.
+See the Demmel or Trefethen/Bau textbooks for details.
+
+\item{\bf Lanczos iteration}.
+The Lanczos iteration computes the matrices $Q$ and $T$ above,
+one column at a time.
+It begins with an arbitrary (typically random)
+unit vector $q_1$ as the first column
+of $Q$, and at step $t$ it computes the vector $v=Aq_t$,
+orthogonalizes $v$ against columns $q_t$ and $q_{t-1}$,
+and scales the orthogonalized vector to unit length.
+Because $T$ is symmetric and tridiagonal, 
+the resulting vector is actually orthogonal to all columns $q_1$ 
+through $q_t$, and it becomes column $q_{t+1}$.
+The coefficients of the orthogonalization become the entries of $T$.
+See the class notes (or Demmel or Trefethen/Bau) for the details
+of the formulas.
+The Lanczos iteration can be viewed as building orthogonal bases 
+for the Krylov subspaces $K_t(A,q_1)$.
+Unlike the $QR$ algorithm~(\ref{QR}),
+the only thing Lanczos needs to do with
+the matrix $A$ is to multiply it by vectors, 
+which is useful when $A$ is sparse.
+
+\item{\bf Lanczos algorithm}.
+The Lanczos algorithm computes approximations
+to some of the eigenvalues of~$A$. 
+It first performs some number~$t$ (typically much less than~$n$)
+of Lanczos iterations to get an $n$-by-$t$ matrix~$Q_t$ 
+with orthonormal columns (i.e.\ $Q_t^TQ_t = I_t$) and a 
+$t$-by-$t$ symmetric tridiagonal matrix~$T_t = Q_t^TAQ_t$.
+It then uses the second (``toothpaste-squeezing'') phase of
+the symmetric $QR$ algorithm~(\ref{QR}) to diagonalize
+$T_t=V_t\Theta V_t^T$, where $V_t$ is $t$-by-$t$ and orthogonal,
+and $\Theta$ is diagonal.
+Then the numbers $\theta_1,\theta_2\ldots,\theta_t$ on the diagonal
+of~$\Theta$ (the eigenvalues of~$T_k$) are {\em Ritz values} for~$A$,
+and the columns of~$Q_kV_k$ are the corresponding {\em Ritz vectors}.
+(There is a lot of numerical-algorithm engineering involved in a
+practical implementation of Lanczos; 
+see Demmel or the 1994 Grimes/Lewis/Simon SIMAX paper for details.)
+
+\item{\bf Ritz values}.
+The Ritz values of a matrix approximate some of its eigenvalues.
+The whole story is rather involved; see Demmel for more of it.
+In exact real arithmetic, if $A$ has no multiple eigenvalues, 
+the Ritz values after $t=n$~steps are equal to the $n$~eigenvalues 
+of~$A$. 
+Multiple (or very close) eigenvalues are tricky; 
+block versions of Lanczos can be used here.
+In exact arithmetic, at stage~$t$, every Ritz value
+is guaranteed to be within~$\beta_t$ of some eigenvalue,
+where $\beta_t$ is the subdiagonal element in column~$t$ of~$T$.
+Generally speaking, the extreme Ritz values 
+(those closest to $+\infty$ and~$-\infty$)
+tend to converge quickly to the extreme eigenvalues.
+
+\item\label{schur}{\bf Schur complement}.
+If matrix $M$ is partitioned into a 2-by-2 block form
+$$ M =
+\begin{pmatrix}
+A & B \cr
+C & D \cr
+\end{pmatrix}
+$$
+such that $A$ is square and nonsingular, 
+then the Schur complement of $A$ in $M$
+(sometimes also called the ``Schur complement on $D$'')
+is the matrix 
+$$D - CA^{-1}B.$$
+
+\item\label{inc}{\bf Incidence matrix}.
+If $G$ is a graph with $n$~vertices and $m$~edges,
+an incidence matrix of~$G$ is an $n$-by-$m$ matrix~$U$
+with a column for each edge of~$G$.  
+The column for edge~$(a,b)$ contains two nonzeros,
+a $1$ and a~$-1$, one in row~$a$ and one in row~$b$.
+The incidence matrix is not unique; permuting its columns
+or negating some of its columns produces another incidence matrix.
+Any incidence matrix~$U$ is related to the Laplacian~$L_G$ by
+$$L_G = UU^T.$$
+
+\item
+If $G$ is a weighted graph, its incidence matrix is the same
+as above~(\ref{inc}), without weights.  If $C=\diag(c)$ is
+the diagonal matrix of edge weights, in the same order as the
+columns of~$U$, then the weighted Laplacian~$L_G$ satisfies
+$$L_G = UCU^T.$$
+
+\item\label{aug}{\bf Augmented matrix}.
+An augmented matrix of an unweighted graph with $n$~vertices 
+and $m$~edges is a
+symmetric $(n+m)$-by-$(n+m)$ matrix defined in block form as
+$$
+\begin{pmatrix}
+I & U^T \cr
+U & 0 \cr
+\end{pmatrix}
+,
+$$
+where $U$ is an incidence matrix and $I$ is the $m$-by-$m$ 
+identity matrix.
+An augmented matrix of a weighted graph is
+$$
+\begin{pmatrix}
+R & U^T \cr
+U & 0 \cr
+\end{pmatrix}
+,
+$$
+where $R=\diag(1/c)=C^{-1}$ is the diagonal matrix of inverse edge weights.
+The Schur complement of $R$ is then $-UR^{-1}U^T = -L$, the negative
+of the weighted Laplacian.
+
+\item\label{resistive}{\bf Resistive network}.
+A resistive network is a weighted graph with $n$~vertices
+interpreted as nodes of an electrical circuit and $m$ edges interpreted
+as resistors joining pairs of nodes.  
+If the resistor at edge $e$ has resistance $r(e)$, the edge's weight
+is the inverse resistance $c(e) = 1/r(e)$.
+(Inverse resistance is often called ``conductance,'' whence the letter $c$, 
+but we will not use the term in this context to avoid confusion with the
+unrelated notion of graph conductance in~(\ref{cond}) above.)
+
+\item
+In a resistive network~$G$, suppose a current $i(a)$ is injected at each
+vertex~$a$, where $\ones^T i=0$ so the same total current is injected and
+removed from the network as a whole.
+For each edge $(a,b)\in E$ with $a<b$, let $f(a,b)$ be the {\em current} or 
+{\em flow} along edge $(a,b)$.
+Then {\em Ohm's law}, or current times resistance equals voltage, says
+$$v(a)-v(b) = f(a,b)r(a,b) \;\;\;\; \mbox{for all $(a,b)\in E$}.$$
+{\em Kirchoff's current law}, or current entering a node equals current leaving the node,
+says
+$$\sum_{b:(a,b)\in E} f(a,b) = i(a) \;\;\;\; \mbox{for all $a\in V$}.$$
+The two laws can be combined in one augmented system (\ref{aug}) as
+$$
+\begin{pmatrix}
+R & U^T \cr
+U & 0 \cr
+\end{pmatrix}
+\begin{pmatrix}
+f \cr
+-v \cr
+\end{pmatrix}
+=
+\begin{pmatrix}
+0 \cr
+i \cr
+\end{pmatrix},
+$$
+where $U$ is the incidence matrix of~$G$
+with appropriate signs, and $R$ is the
+$m$-by-$m$ diagonal matrix of edge resistances.
+The Schur complement of $R$ is $-UR^{-1}U^T$, 
+which is the negative Laplacian $-L$.  
+A step of block Gaussian elimination on the augmented
+system thus leads to the Laplacian linear system
+$$Lv=i$$
+relating the node voltages to the externally injected currents.
+
+\item{\bf Effective resistance}.
+In a resistive network, the effective resistance between
+two vertices~$a$ and~$b$, written $\Reff(a,b)$, 
+is the positive difference in voltage
+between~$a$ and~$b$ when one unit of current is injected at~$a$
+and extracted at~$b$.
+That is, if $Lv=\ones_a-\ones_b$ for~$a<b$, then
+$$\Reff(a,b) = (\ones_a-\ones_b)^Tv 
+  = (\ones_a-\ones_b)^TL\pinv (\ones_a-\ones_b) = v^TLv,$$
+where $\ones_a-\ones_b$
+is the vector whose $k$'th element is equal to 1 when $k=a$, 
+equal to $-1$ when $k=b$, and equal to zero elsewhere.
+We write $\Reff_G(a,b)$ if the graph is not clear from context.
+
+\item\label{GE}{\bf Symmetric Gaussian elimination}.
+If $L$ is the Laplacian of a connected weighted graph~$G$ 
+with $n>1$~vertices,
+then the result of one step of Gaussian elimination on~$L$ is the
+$n-1$-by-$n-1$ matrix
+$$L_B = L(2:n, 2:n) - \frac{1}{L(1,1)}L(2:n,1)L(1,2:n),$$
+which is a rank-1 modification to the submatrix $L(2:n, 2:n)$.
+Note that $L_B$ is the Schur complement of~$L(1,1)$ in~$L$.
+Also, $L_B$ is the Laplacian matrix of the (suitably weighted) 
+graph obtained from~$G$
+by adding edges between all neighbors of vertex~1,
+and then deleting vertex~1 and all its incident edges.
+
+If $B$ is any set of vertices of~$G$ and $A=V-B$, 
+and Gaussian elimination is used to eliminate all the 
+vertices of~$A$ in any order, the result is the matrix
+$$L_B = L(B,B) - L(B,A)L(A,A)^{-1}L(A,B),$$
+which is the Schur complement of~$L(A,A)$ (or on~$L(B,B)$) in~$L$.
+Then $L_B$ is the Laplacian matrix of the (suitably weighted)
+graph obtained from~$G$ by adding an edge between every pair 
+of vertices in~$B$ that are connected in~$G$ by a path of 
+vertices in~$A$.
+
+\item{\bf Equivalent networks}.
+If $G$ is a connected weighted graph whose vertices are
+partitioned into a set~$B$ of ``boundary'' vertices and
+a set~$V-B$ of ``interior'' vertices, 
+and if $L_B$ is the Schur complement on~$L_G(B,B)$ 
+as above~(\ref{GE}),
+then the effective resistances between vertices of~$B$
+are the same in~$L_G$ and in~$L_B$:
+$$\Reff_{L_B}(a,b) = \Reff_{L_G}(a,b)\;\;\mbox{for all $a,b\in B$}.$$
+Note that $L_B$ is {\em not} a submatrix of~$L_G$, 
+and the graph of~$L_B$ generally has more edges than the induced 
+subgraph of~$G$ on vertices~$B$.
+
+\item\label{Cholesky}{\bf Cholesky factorization}.
+If~$A$ is any positive definite matrix 
+(or, with some care, a positive semidefinite matrix),
+the Cholesky factorization is $A=R^TR$, where $R$
+is an upper triangular matrix with positive diagonal elements
+(non-negative in the semidefinite case).
+The Cholesky factorization of any $n$-by-$n$ matrix can
+be computed in $O(n^3)$ time and $O(n^2)$ memory;
+some but by no means all sparse matrices have better
+bounds.
+
+\item{\bf Cholesky graph game}.
+Given positive (semi)definite~$A$ with undirected graph~$G(A)$,
+the undirected graph~$G^+(A)=G(R+R^T)$ of the Cholesky factors
+of~$A$ is obtained as follows:
+\begin{verbatim}
+        for a = 1 : n
+          mark vertex a;
+          add "fill" edges between the umarked neighbors of vertex a;
+        end for
+\end{verbatim}
+(This gives the nonzero structure of~$R$ but not the nonzero values.)
+We are free to mark the vertices in any order;
+choosing a different order corresponds to applying a
+permutation symmetrically to the rows and columns of~$A$.
+
+\item{\bf Parter's theorem}.
+If the graph $G(A)$ is a tree, a vertex ordering exists for
+which the Cholesky factorization adds no fill and solving
+$Ax=b$ takes only $O(n)$ time and memory.
+
+\item{\bf Nested dissection}.
+If the graph $G(A)$ is the $\sqrt{n}$-by-$\sqrt{n}$ grid graph,
+the best possible elimination ordering has $O(n\log n)$ fill,
+for which Cholesky takes $O(n^{3/2})$ time.
+The same upper bounds hold for any planar graph.
+For the three-dimensional grid graph, the best possible
+fill is $O(n^{4/3})$ and Cholesky takes $O(n^2)$ time.
+
+\item{\bf Matrix polynomials}.
+If $p(z) = \sum_{k=0}^t \beta_kz^k$ is a polynomial in a 
+scalar variable~$z$, and $A$~is a matrix,
+we write $p(A) = \sum_{k=0}^t \beta_kA^k$.
+Note that every vector in the Krylov subspace $\krylov_{t+1}(A,b)$
+is~$p(A)b$ for some polynomial~$p(z)$ of degree~$t$.
+
+\item
+If $A$ is a symmetric matrix, $Ax=b$, 
+and $q(z) = 1 - zp(z)$ is a polynomial with
+$q(0)=1$ and $q(\lambda)=0$ for every eigenvalue~$\lambda$ of~$A$,
+then $p(A)b = x$.
+Therefore $x$ is in the Krylov subspace $\krylov_{t}(A,b)$, 
+where $t$ is the number of {\em distinct} eigenvalues of~$A$.
+
+\item{\bf Condition number}.
+The condition number of a square matrix~$A$ is 
+$\kappa(A)=\|A\|\,\|A^{-1}\|$, interpreted as~$\infty$
+if $A$ is singular.  If $A$ is symmetric and positive 
+definite, $\kappa(A) = \lambda_n/\lambda_1$ is the ratio
+of the extreme eigenvalues.
+
+\item{\bf Finite condition number}.
+For a symmetric positive semidefinite matrix~$A$,
+the finite condition number
+$\kappa_f(A)=\lambda_n/\lambda_k$, where $\lambda_k$ is
+the smallest nonzero eigenvalue.
+
+\item
+Let~$A$ and~$B$ be symmetric positive semidefinite matrices
+with the same null space (e.g., weighted Laplacians of two
+connected graphs on the same vertices).
+The {\em finite condition number}~$\kappa_f(A,B)$ is $\kappa_f(AB\pinv)$.
+Note that $\kappa_f(A,B) = \kappa_f(B,A)$.
+
+\item{\bf Conjugate gradient}.\label{cg} 
+The conjugate gradient algorithm (or CG)
+solves $Ax=b$, where $A$ is a symmetric, positive definite
+matrix (see Shewchuk for details).
+Each iteration performs one matrix-vector multiplication with~$A$
+and some vector arithmetic, taking $O(n+m)$~time per iteration
+if $A$~has $m$~nonzeros.
+The relative error in the approximate solution~$x_t$ is bounded by
+$$\frac{\|x_t-x\|_A}{\|x\|_A} < \epsilon$$
+after 
+$$t = O(\sqrt{\kappa(A)}\,\log(1/\epsilon))$$
+iterations (in exact arithmetic), 
+where $\kappa(A)=\lambda_n/\lambda_1$ is the condition number of~$A$
+and $\|v\|_A = (v^TAv)^{1/2}$ is the $A$-norm.
+With some care, CG can also be used for a positive semidefinite
+matrix whose null space is known, e.g.\ a weighted graph Laplacian.
+In that case, 
+the convergence bound uses the finite condition number~$\kappa_f(A)$.
+
+\item\label{evalcluster}
+When some of the eigenvalues of~$A$ are clustered together, 
+better bounds than $O(\sqrt{\kappa_f(A)}\,\log(1/\epsilon))$
+may hold on the number of CG iterations to convergence.
+For example, if all but $k$ of the nonzero eigenvalues are
+contained in a range $a\le\lambda_i\le b$, CG will converge to
+$$\frac{\|x_t-x\|_A}{\|x\|_A} < \epsilon$$
+after at most
+$$t = k + O(\sqrt{b/a}\,\log(1/\epsilon))$$
+iterations (in exact arithmetic).
+
+\item{\bf Preconditioned conjugate gradient}.\label{pcg} 
+The preconditioned conjugate gradient algorithm (or PCG)
+solves $Ax=b$ by applying CG to the linear system 
+$$(B^{-1/2}AB^{-1/2})(B^{1/2}x) = B^{-1/2}b,$$
+where $A$ and~$B$ are symmetric positive definite.
+Each iteration of PCG performs one matrix-vector multiplication with~$A$,
+one linear system solve with~$B$, and some vector arithmetic.
+Matrix~$B$ is called a {\em preconditioner} for~$A$, 
+and may or may not be formed explicitly.
+A good preconditioner satisfies two criteria:
+\begin{itemize}
+\item It is easier to solve linear systems with $B$ than with $A$.
+\item The condition number 
+$\kappa(B^{-1/2}AB^{-1/2}) = \kappa(AB^{-1}) = \kappa(A,B)$
+is smaller than $\kappa(A)$.
+\end{itemize}
+With some care, PCG can also be used with positive semidefinite
+matrices $A$ and~$B$ if they have the same null space.
+In that case, 
+the relevant condition number is the finite condition number~$\kappa_f(A,B)$.
+
+\item{\bf Trace-based bounds on CG}.
+A consequence of~(\ref{evalcluster}) is the following bound on
+conjugate gradient iterations for a matrix (or preconditioned matrix)~$A$
+whose smallest nonzero eigenvalue is known to be at least~1.
+In that case the number of iterations to $\epsilon$-convergence
+is at most $O(\Tr(A)^{1/3}\log(1/\epsilon))$.
+
+\item {\bf Semidefinite order (Loewner order)}.
+If $A$ is a symmetric matrix, 
+$A\succeq 0$ means that $A$ is positive semidefinite 
+(all eigenvalues of~$A$ are non-negative) and
+$A\succ 0$ means that $A$ is positive definite
+(all eigenvalues of~$A$ are positive).
+If $A$ and~$B$ are symmetric matrices, 
+$A\preceq B$ means $B-A\succeq 0$ and
+$A\prec B$ means $B-A\succ 0$.
+If $G$ and~$H$ are graphs or weighted graphs, 
+$G\preceq H$ means $L_G\preceq L_H$.
+Here are some properties of this order.
+
+\begin{itemize}
+
+\item Loewner order is only a partial order;
+there are matrices $A\succeq 0$ and~$B\succeq 0$
+for which neither $A\preceq B$ nor~$B\preceq A$.
+
+\item If $A\preceq B$ and $B\preceq C$, then $A\preceq C$.
+
+\item If $A\preceq B$ and $B\preceq A$, then $A=B$.
+
+\item $A\preceq B$ iff $x^TAx \leq x^TBx$ for all vectors~$x$.
+
+\item $A\preceq B$ implies $\lambda_i(A) \leq \lambda_i(B)$
+for all $1\leq i\leq n$. The converse is false.
+
+\item $A\preceq B$ implies $CAC^T \preceq CBC^T$ for all matrices~$C$, 
+including non-symmetric and non-square matrices. The converse holds
+for nonsingular matrices~$C$.
+
+\item If $0\preceq A\preceq B$, then $B\pinvroot A B\pinvroot \preceq I$.
+
+\item If $0\preceq A\preceq B$ and $A$ and $B$ have the same null space,
+then $B\pinv\preceq A\pinv$.
+
+\item
+Let $G$ and $H$ be resistive networks on the same number of vertices.
+If $H\preceq G$, then for every pair of vertices $a$,~$b$ we have
+$\Reff_G(a,b) \leq \Reff_H(a,b)$.
+
+\item
+If~$A\succeq 0$ and~$B\succeq 0$ have the same null space,
+and $\alpha B \preceq A \preceq \beta B$,
+then $\alpha \leq \lambda \leq \beta$
+for every nonzero eigenvalue~$\lambda$ of~$AB\pinv$,
+and therefore $\kappa_f(A,B) \leq \beta/\alpha$.
+
+\end{itemize}
+
+\item {\bf Graph approximation}.
+For any constant $\alpha\geq 1$, 
+(weighted) graph~$H$ is an {\em $\epsilon$-approximation} 
+of (weighted)~graph $G$ if $(1-\epsilon) H \preceq G \preceq (1+\epsilon)H$.
+This definition actually applies to all symmetric matrices, 
+not just graph Laplacians.
+We say loosely that~$G$ and~$H$ are $\epsilon$-approximations of each other,
+though the values of~$\epsilon$ are slightly different in each direction.
+
+This is a powerful statement.
+If $G$ and~$H$ are $\epsilon$-approximations: 
+
+\begin{itemize}
+
+\item Their eigenvalues are similar: 
+$(1-\epsilon)\lambda_i(H)\leq\lambda_i(G)\leq(1+\epsilon)\lambda_i(H)$
+for all~$i$.
+
+\item They operate similarly on vectors:
+$\|Gx-Hx\|/(\|G\|\,\|x\|) \leq \epsilon$.
+
+\item Solutions of linear systems are similar:
+$\|G\pinv b - H\pinv b\|/(\|G\pinv\|\,\|b\|) \leq \epsilon/(1-\epsilon)$.
+
+\item They are good preconditioners for each other:
+$\kappa_f(G,H) = 1 + O(\epsilon)$.
+
+\item Their effective resistances $\Reff_G(a,b)$ and $\Reff_H(a,b)$
+are similar for every pair $a$, $b$ of vertices.
+
+\item All their weighted cuts are similar, 
+since $\ones_A^TG\pinv\ones_A$ is close to $\ones_A^TH\pinv\ones_A$ 
+for every set~$A$ of vertices.
+
+\end{itemize}
+
+\item{\bf Leverage score}.
+If $G$ is a graph with edge weights~$c(e) = c(a,b)$, 
+the leverage score of edge~$e = (a,b)$ is
+$$\ell_e=c(a,b)\Reff(a,b).$$
+Since, in a resistive network, 
+$c(e)$ is the inverse of the resistance  of edge $e$,
+the leverage score is the ratio of the effective resistance
+across the edge to the edge resistance. 
+Therefore $0\leq\ell_e\leq 1$ for every edge.
+If cutting edge~$e$ disconnects the graph, then $\ell_e=1$.
+The sum of the leverage scores of all edges is $n-1$;
+see~(\ref{rtree}).
+
+\item{\bf Spanning trees, fundamental cycles}.\label{stree}
+If $G$ is a connected graph (or a connected weighted Laplacian),
+a spanning tree of~$G$ is a subgraph~$T$ of~$G$ that has
+no cycles (a tree) and includes all the vertices of~$G$ (spanning).
+Unless otherwise stated, 
+edges of~$T$ have the same weight in~$T$ as they have in~$G$.
+Each edge~$e=(a,b)$ that is in~$G$ but not in~$T$ induces a
+fundamental cycle consisting of~$e$ and the unique path~$P(e)$
+in~$T$ between its endpoints~$a$ and~$b$.
+For an edge $e=(a,b)$ of~$T$, we write~$P(e)=(a,b)$ 
+for the length-one path between its endpoints, 
+but~$e$ does not induce a fundamental cycle.
+
+\item{\bf Random spanning tree theorem}.\label{rtree}
+If we choose a spanning tree~$T$ of connected~$G$ at random 
+with probability proportional to the product of its edge weights, 
+then for every edge~$e\in G$,
+$$\Pr[e\in T] = \ell_e.$$
+It follows that the sum of the leverage scores is $n-1$,
+the number of edges in a spanning tree.
+
+\item{\bf Spectral sparsifiers}.
+Let $G$ be a connected weighted Laplacian.
+Select a subgraph~$H$ at random by choosing each edge
+of~$G$ independently with probability proportional to its leverage score.
+Then inflate the weights of each edge of~$H$ 
+by the inverse of its probability of being chosen.
+This inflation makes the expected value of~$H$ (as a matrix) equal to~$G$.
+
+If we take the constant of proportionality to be $\tau=3.5\ln n/\epsilon^2$,
+we choose edge~$e$ with probability~$\tau\ell_e$.
+If $e$ is chosen then its new weight in~$H$ 
+becomes~$c(e)/\tau\ell_e = 1/\tau\Reff(e)$.
+It is a theorem that (with high probability) this subgraph~$H$ 
+is an $\epsilon$-approximation of~$G$ and has $O(n\log n/\epsilon^2)$ edges.
+A more complicated construction yields an $\epsilon$-approximation
+with only $O(n/\epsilon^2)$ edges.
+
+\item{\bf Stretch of an edge}.
+If $T$ is a spanning tree of~$G$ 
+(connected Laplacians with edge weights $c(e)$),
+the stretch of an edge~$e$ of~$G$ is the following sum along the
+tree path $P(e)$ between its endpoints:
+$$\stretchh(e) = c(e)\sum_{f\in P(e)}\frac{1}{c(f)}.$$
+If we interpret $G$ and~$T$ as resistive networks
+with resistances $r(e) = 1/c(e)$, 
+then the stretch of edge~$e$ is just~$r(P(e))/r(e)$,
+which is ratio of the effective resistance in $T$ to the
+edge resistance in~$G$ between the endpoints of~$e$,
+$$\stretchh(a,b) = \frac{\Reff_T(a,b)}{r_G(a,b)}.$$
+We could use the latter equality as the definition of stretch
+for an arbitrary subgraph, not necessarily a tree.
+
+\item{\bf Stretch of a tree}.
+The stretch of a spanning tree~$T$ of~$G$ 
+(connected weighted Laplacians)
+is the total stretch of the edges of~$G$ (not the edges of~$T$),
+$$\stretchh_G(T)=\sum_{e\in G}\stretchh(e)=\Tr(T\pinv G).$$
+The second equality above states that the total stretch is equal to 
+the trace (or sum of eigenvalues) of the preconditioned matrix,
+which is straightforward to verify.
+
+\item{\bf Low-stretch trees}.
+A nontrivial theorem is that every weighted graph~$G$ 
+with $n$~vertices and $m$~edges
+has a spanning tree~$T$ with nearly linear stretch,
+$$\stretchh_G(T)=O(m\log n\log\log n),$$
+which can be found in $O(m\log n\log\log n)$ (expected) time.
+It is an open problem whether the stretch can be improved
+to $O(m\log n)$ in general, which would be best possible.
+
+\item{\bf Preconditioning by trees}.
+When a low-stretch spanning tree is used to precondition 
+a connected Laplacian linear system, the number of iterations to
+$\epsilon$-convergence is $\tilde{O}(m^{1/3}\log(1/\epsilon))$ 
+and the running time is $\tilde{O}(m^{4/3}\log(1/\epsilon))$.
+Here $m$ is the number of edges in the graph, 
+and $\tilde{O}()$ hides factors polynomial in~$\log n$.
+
+\item {\bf Spielman-Teng solver}.
+In a series of papers published from 2004 to~2014,
+Spielman and Teng used spectral sparsification and
+recursive preconditioning to give the first algorithm that
+solves Laplacian linear systems in time $\tilde{O}(m\log(1/\epsilon))$.
+
+\item {\bf Incremental sparsifiers}.
+Koutis, Miller, and Peng (2010) presented a randomized algorithm that,
+given a weighted graph~$G$ and a constant~$3\leq\kappa<3m$, 
+produces a so-called incremental sparsifier, 
+which is a graph~$H$ with $n-1+ \tilde{O}(m/\kappa)$ edges 
+for which $G\preceq H\preceq \kappa G$.
+The algorithm samples edges of~$G$ with probability proportional 
+to their stretch relative to a low-stretch spanning tree.
+It runs in time~$\tilde{O}(m)$.
+
+
+\item {\bf KMP solver}.
+Koutis, Miller, and Peng (2010) used incremental sparsifiers and
+recursive preconditioning to give an algorithm that solves Laplacian 
+linear systems in time~$\tilde{O}(m\log(1/\epsilon))$.
+The KMP algorithm is closely related to the Spielman-Teng algorithm,
+but is simpler and also faster;
+in S-T the $\tilde{O}()$ hides a high power of~$\log n$,
+while in KMP it hides only $\log^2 n$ times a power of~$\log\log n$.
+
+\item {\bf Other fast solvers.}
+Since KMP, several other $\tilde{O}(m\log(1/\epsilon))$-time
+Laplacian solvers have been invented, 
+and the field is still seeing rapid development.
+Two that are particularly simple in structure are
+Kelner et al.'s 2013 algorithm that performs random Kaczmarz 
+projections against fundamental cycles with respect to a
+low-stretch tree,
+and Kyng and Sachdeva's 2016 algorithm that produces an
+incomplete Cholesky factor by randomly sampling fill edges
+to keep at each elimination step.
+As of this writing, the asymptotically most efficient
+is due to Cohen et al.\ (2014) 
+and runs in time $O(m\log^{1/2}n\log\log^c n\log(1/\epsilon))$.
+
+\end{enumerate}
+
+\end{document}

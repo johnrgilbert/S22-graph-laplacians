@@ -1,0 +1,15 @@
+# Ignore Emacs, Vim, and Jupyter backup files
+*~
+\#*
+*.swp
+.ipynb_checkpoints/
+
+# Ignore LaTeX work files
+*.aux
+*.log
+
+# Ignore MacOS directory display format files 
+.DS_Store
+
+# Ignore archive versions of the index
+20*

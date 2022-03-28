@@ -1,0 +1,8 @@
+# Ignore stuff I don't want to archive
+
+/AllClassTranscripts/
+/Laplacians.jl/
+/sandbox/
+
+*.txt
+*.jld2

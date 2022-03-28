@@ -1,0 +1,1 @@
+This directory contains the materials I use or generate in each lecture, including Matlab transcripts and figures and any slides. It also includes my ipad notes from the online 2021 version of the course, which don't match this year's lectures perfectly but might be useful as a reference.
