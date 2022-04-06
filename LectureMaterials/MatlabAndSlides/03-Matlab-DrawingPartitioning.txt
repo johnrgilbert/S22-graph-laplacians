@@ -1,0 +1,182 @@
+Matlab diary from CS 292F, Tuesday, April 05, 2022
+
+This is /Users/gilbert/Documents/S22-graph-laplacians/Matlab/startup.m
+Using diary file matlab-diary-05-Apr-2022.txt
+
+load airfoil
+
+whos
+  Name              Size               Bytes  Class     Attributes
+
+  L              4253x4253            495328  double    sparse    
+  graphname         1x7                   14  char                
+  v              4253x3               102072  double              
+  xy             4253x2                68048  double              
+
+gplotg(L,xy);
+figure
+v
+v =
+   -0.0154    0.0071   -0.0054
+   -0.0163    0.0058   -0.0040
+   -0.0172    0.0038   -0.0020
+   ...
+    0.0075   -0.0196   -0.0106
+    0.0061    0.0018   -0.0259
+    0.0078   -0.0186   -0.0122
+
+vv = v(:,1:2)
+vv =
+   -0.0154    0.0071
+   -0.0163    0.0058
+   -0.0172    0.0038
+    ...
+    0.0075   -0.0196
+    0.0061    0.0018
+    0.0078   -0.0186
+
+gplotg(L,vv)
+
+clear
+load yale
+whos
+  Name              Size               Bytes  Class     Attributes
+
+  L              1059x1059            126192  double    sparse    
+  graphname         1x4                    8  char                
+  v              1059x3                25416  double              
+  xy             1059x2                16944  double              
+
+spy(L)
+
+gplotg(L,v(:,1:2)); shg
+figure; gplotg(L,xy); shg
+
+clear
+load dodec
+whos
+  Name            Size            Bytes  Class     Attributes
+
+  L              20x20             1448  double    sparse    
+  graphname       1x5                10  char                
+  v              20x3               480  double              
+
+gplotg(L,v(:,1:2)); shg
+clc
+v
+v =
+   -0.1291    0.0615   -0.3599
+   -0.1291   -0.2083   -0.2999
+   -0.2887   -0.2463   -0.0774
+   -0.3873    0.0000   -0.0000
+   -0.2887    0.1902   -0.1746
+   -0.1291    0.3639   -0.0305
+   -0.1291    0.2810    0.2332
+   -0.2887    0.0561    0.2520
+    0.1291    0.2083    0.2999
+    0.1291   -0.0615    0.3599
+   -0.1291   -0.1556    0.3304
+    0.2887   -0.1902    0.1746
+   -0.1291   -0.3425    0.1267
+    0.1291   -0.3639    0.0305
+    0.1291   -0.2810   -0.2332
+    0.1291    0.1556   -0.3304
+    0.2887   -0.0561   -0.2520
+    0.1291    0.3425   -0.1267
+    0.2887    0.2463    0.0774
+    0.3873   -0.0000    0.0000
+v' * v
+ans =
+    1.0000    0.0000    0.0000
+    0.0000    1.0000    0.0000
+    0.0000    0.0000    1.0000
+v' * L * v
+ans =
+    0.7639    0.0000    0.0000
+    0.0000    0.7639    0.0000
+    0.0000    0.0000    0.7639
+
+gplotg(L,v); shg
+
+clc
+load pgp
+whos
+  Name               Size                 Bytes  Class     Attributes
+
+  L              10680x10680            1034440  double    sparse    
+  ans                3x3                     72  double              
+  graphname          1x3                      6  char                
+  v              10680x3                 256320  double              
+
+spy(L);shg
+gplotg(L,v(:,1:2)); shg
+
+clear
+clc
+load airfoil
+whos
+  Name              Size               Bytes  Class     Attributes
+
+  L              4253x4253            495328  double    sparse    
+  graphname         1x7                   14  char                
+  v              4253x3               102072  double              
+  xy             4253x2                68048  double              
+
+help specpart
+  <strong>specpart</strong> : Spectral partition of a graph.
+ 
+  [part1,part2] = specpart(A) returns a partition of the n vertices
+                  of A into two lists part1 and part2 according to the
+                  spectral bisection algorithm of Simon et al:  
+                  Label the vertices with the components of the Fiedler vector
+                  (the second eigenvector of the Laplacian matrix) and partition
+                  them about the median value.
+ 
+  [part1,part2,sep1,sep2] = specpart(.) also returns the separating edges.
+ 
+  If vertex coordinates are given as a second argument,
+  specpart(A,xy) draws a picture of the result.
+ 
+  See also <a href="matlab:help laplacian -displayBanner">laplacian</a>, <a href="matlab:help fiedler -displayBanner">fiedler</a>.
+ 
+[A,B] = specpart(L);
+
+whos
+
+A
+A =
+  Columns 1 through 7
+        1841        1852        1856        1859        1861        1864        1867
+  Columns 8 through 14
+        1873        1874        1878        1881        1883        1891        1892
+  Columns 15 through 21
+        1894        1895        1896        1900        1902        1904        1907
+  Columns 22 through 28
+        1908        1909        1910        1912        1913        1915        1916
+  Columns 29 through 35
+        1917        1919        1921        1922        1923        1924        1925
+  ...
+  Columns 2,108 through 2,114
+        4223        4224        4226        4228        4230        4233        4234
+  Columns 2,115 through 2,121
+        4236        4238        4239        4240        4241        4242        4243
+  Columns 2,122 through 2,126
+        4244        4247        4248        4250        4253
+B
+B =
+  Columns 1 through 7
+           1           2           3           4           5           6           7
+  Columns 8 through 14
+           8           9          10          11          12          13          14
+  Columns 15 through 21
+          15          16          17          18          19          20          21
+  ...
+  Columns 2,108 through 2,114
+        4196        4197        4203        4209        4211        4214        4218
+  Columns 2,115 through 2,121
+        4220        4225        4227        4229        4231        4232        4235
+  Columns 2,122 through 2,127
+        4237        4245        4246        4249        4251        4252
+
+[A,B] = specpart(L, xy);
+figure;[A,B] = specpart(L, v(:,1:2));shg
