@@ -1,0 +1,281 @@
+Matlab diary from CS 292F, Tuesday, May 17, 2022
+
+This is /Users/gilbert/Documents/S22-graph-laplacians/Matlab/startup.m
+Using diary file matlab-diary-17-May-2022.txt
+
+A = grid5(10);
+whos
+  Name        Size             Bytes  Class     Attributes
+
+  A         100x100             8168  double    sparse    
+
+spy(A)
+
+title('10 by 10 grid graph')
+
+A(1:10,1:10)
+ans =
+   (1,1)        4
+   (2,1)       -1
+   (1,2)       -1
+   (2,2)        4
+   (3,2)       -1
+   (2,3)       -1
+   (3,3)        4
+   (4,3)       -1
+   (3,4)       -1
+   (4,4)        4
+   (5,4)       -1
+   (4,5)       -1
+   (5,5)        4
+   (6,5)       -1
+   (5,6)       -1
+   (6,6)        4
+   (7,6)       -1
+   (6,7)       -1
+   (7,7)        4
+   (8,7)       -1
+   (7,8)       -1
+   (8,8)        4
+   (9,8)       -1
+   (8,9)       -1
+   (9,9)        4
+  (10,9)       -1
+   (9,10)      -1
+  (10,10)       4
+
+condest(A)
+ans =
+   69.8634
+
+e = eig(A);
+size(e)
+ans =
+   100     1
+max(e)/min(e)
+ans =
+   48.3742
+
+n = length(A)
+n =
+   100
+
+b = rand(n,1);
+
+x = A\b;
+norm(A*x-b) / norm(b)
+ans =
+   2.8461e-15
+
+help pcg
+ ...
+ 
+[x, flag, relres, iter, resvec] = pcg(A,b,1e-6,n);
+iter
+iter =
+    28
+norm(A*x-b) / norm(b)
+ans =
+   4.1235e-07
+
+semilogy(resvec / resvec(1)) ; shg
+title('convergence history') ; shg
+xlabel('iteration') ; shg
+ylabel('residual reduction') ; shg
+
+clear
+close all
+clc
+
+load bcsstk08
+whos
+  Name             Size               Bytes  Class     Attributes
+
+  BCSSTK08      1074x1074            215976  double    sparse    
+  M                1x1               216646  struct              
+
+A = BCSSTK08;
+
+n = length(A)
+n =
+        1074
+
+condest(A)
+ans =
+   4.7262e+07
+
+b = rand(n,1);
+
+[x, flag, relres, iter, resvec] = pcg(A,b,1e-6,n);
+iter
+iter =
+        1073
+
+semilogy(resvec / resvec(1)) ; shg
+title('convergence history') ; shg
+
+[x, flag, relres, iter, resvec] = pcg(A,b,1e-6,10*n);
+iter
+iter =
+        6555
+semilogy(resvec / resvec(1)) ; shg
+title('convergence history') ; shg
+xlabel('iteration') ; shg
+ylabel('residual reduction') ; shg
+
+clear
+close all
+clc
+
+load pgp
+whos
+  Name               Size                 Bytes  Class     Attributes
+
+  L              10680x10680            1034440  double    sparse    
+  graphname          1x3                      6  char                
+  v              10680x3                 256320  double              
+
+A = L;
+n = length(A)
+n =
+       10680
+
+spy(A)
+title('PGP Laplacian')
+
+norm(A * ones(n,1))
+ans =
+     0
+
+deg = diag(A);
+hist(deg,100)
+title('Histogram of PGP vertex degrees')
+xlabel('degree')
+ylabel('vertices')
+shg
+
+max(deg)
+ans =
+   (1,1)      205
+
+sum(deg == 1)
+ans =
+   (1,1)           4229
+
+% DON'T!   R = chol(A);
+
+nnz(A)
+ans =
+       59312
+
+n = length(A)
+n =
+       10680
+
+b = rand(n,1);
+b = b - mean(b);
+sum(b)
+ans =
+  -1.5938e-12
+
+[x, flag, relres, iter, resvec] = pcg(A,b,1e-6,n);
+iter
+iter =
+   643
+
+semilogy(resvec / resvec(1)) ; shg ; hold on
+title('convergence history') ; shg
+xlabel('iteration') ; shg
+ylabel('residual reduction') ; shg
+
+D = diag(diag(A));
+size(D)
+ans =
+       10680       10680
+nnz(D)
+ans =
+       10680
+[x, flag, relres, iter, resvec] = pcg(A,b,1e-6,n, D);
+semilogy(resvec / resvec(1), 'k') ; shg ; hold on
+
+help ichol
+ ...
+
+opts.shape = 'upper';
+R = ichol(A, opts);
+figure(3); spy(R)
+title('Incomplete Cholesky factor of PGP')
+shg
+close(3)
+
+figure(1)
+hold on
+
+nnz(R)
+ans =
+       34996
+nnz(triu(A))
+ans =
+       34996
+
+[x, flag, relres, iter, resvec] = pcg(A,b,1e-6,n, R', R);
+semilogy(resvec / resvec(1), 'r') ; shg ; hold on
+legend('no precond', 'Jacobi precond', 'IC precond'); shg
+
+norm(A*x-b) / norm(b)
+ans =
+   9.3110e-07
+
+sum(x)
+ans =
+  636.1258
+
+x = x - mean(x);
+sum(x)
+ans =
+   4.0323e-13
+
+norm(A*x-b) / norm(b)
+ans =
+   9.3110e-07
+
+clear
+close all
+clc
+
+load bcsstk08
+A = BCSSTK08;
+n = length(A)
+n =
+        1074
+
+b = rand(n,1);
+
+[x, flag, relres, iter, resvec] = pcg(A,b,1e-6,n);
+semilogy(resvec / resvec(1)) ; shg ; hold on
+title('convergence history') ; shg
+xlabel('iteration') ; shg
+ylabel('residual reduction') ; shg
+
+D = diag(diag(A));
+size(D)
+ans =
+        1074        1074
+nnz(D)
+ans =
+        1074
+[x, flag, relres, iter, resvec] = pcg(A,b,1e-6,n, D);
+semilogy(resvec / resvec(1), 'k') ; shg ; hold on
+
+opts.shape = 'upper';
+R = ichol(A, opts);
+nnz(R)
+ans =
+        7017
+nnz(triu(A))
+ans =
+        7017
+[x, flag, relres, iter, resvec] = pcg(A,b,1e-6,n, R', R);
+semilogy(resvec / resvec(1), 'r') ; shg ; hold on
+
+diary off
